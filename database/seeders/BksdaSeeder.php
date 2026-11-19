@@ -2,146 +2,209 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Desa;
 use App\Models\Kawasan;
-use App\Models\Nte;
+use App\Models\KegiatanPemberdayaan;
 use App\Models\Kelompok;
+use App\Models\Nte;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class BksdaSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Masukkan Data 18 Kawasan Konservasi & NTE
-        $dataKawasan = [
-            ['nama_kawasan' => 'SM Bakiriang', 'fungsi_kawasan' => 'SM', 'jumlah_desa_sekitar' => 12, 'jumlah_desa_difasilitasi' => 11, 'nte_langsung' => 36180000, 'nte_tidak_langsung' => 85440000, 'total_nte' => 121620000],
-            ['nama_kawasan' => 'CA Morowali', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 17, 'jumlah_desa_difasilitasi' => 10, 'nte_langsung' => 64830000, 'nte_tidak_langsung' => 119350000, 'total_nte' => 184180000],
-            ['nama_kawasan' => 'CA Pamona', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 11, 'jumlah_desa_difasilitasi' => 10, 'nte_langsung' => 38250000, 'nte_tidak_langsung' => 546675000, 'total_nte' => 584925000],
-            ['nama_kawasan' => 'CA Gunung Dako', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 10, 'jumlah_desa_difasilitasi' => 9, 'nte_langsung' => 24600000, 'nte_tidak_langsung' => 9945000, 'total_nte' => 34545000],
-            ['nama_kawasan' => 'CA Gunung Sojol', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 34, 'jumlah_desa_difasilitasi' => 3, 'nte_langsung' => 39900000, 'nte_tidak_langsung' => 7920000, 'total_nte' => 47820000],
-            ['nama_kawasan' => 'TB Londusa Tomata', 'fungsi_kawasan' => 'TB', 'jumlah_desa_sekitar' => 5, 'jumlah_desa_difasilitasi' => 3, 'nte_langsung' => 40950000, 'nte_tidak_langsung' => 63500000, 'total_nte' => 104450000],
-            ['nama_kawasan' => 'CA Pangi Binangga', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 8, 'jumlah_desa_difasilitasi' => 6, 'nte_langsung' => 20000000, 'nte_tidak_langsung' => 30000000, 'total_nte' => 50000000],
-            ['nama_kawasan' => 'CA Saluki', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 7, 'jumlah_desa_difasilitasi' => 5, 'nte_langsung' => 15000000, 'nte_tidak_langsung' => 25000000, 'total_nte' => 40000000],
-            ['nama_kawasan' => 'TWA Wera', 'fungsi_kawasan' => 'TWA', 'jumlah_desa_sekitar' => 6, 'jumlah_desa_difasilitasi' => 4, 'nte_langsung' => 18000000, 'nte_tidak_langsung' => 22000000, 'total_nte' => 40000000],
-            ['nama_kawasan' => 'TWA Danau Poso', 'fungsi_kawasan' => 'TWA', 'jumlah_desa_sekitar' => 9, 'jumlah_desa_difasilitasi' => 7, 'nte_langsung' => 25000000, 'nte_tidak_langsung' => 35000000, 'total_nte' => 60000000],
-            ['nama_kawasan' => 'CA Tanjung Toki', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 4, 'jumlah_desa_difasilitasi' => 2, 'nte_langsung' => 10000000, 'nte_tidak_langsung' => 15000000, 'total_nte' => 25000000],
-            ['nama_kawasan' => 'CA Marisa', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 5, 'jumlah_desa_difasilitasi' => 3, 'nte_langsung' => 12000000, 'nte_tidak_langsung' => 18000000, 'total_nte' => 30000000],
-            ['nama_kawasan' => 'TWA Morowali', 'fungsi_kawasan' => 'TWA', 'jumlah_desa_sekitar' => 6, 'jumlah_desa_difasilitasi' => 4, 'nte_langsung' => 14000000, 'nte_tidak_langsung' => 20000000, 'total_nte' => 34000000],
-            ['nama_kawasan' => 'SM Banggai', 'fungsi_kawasan' => 'SM', 'jumlah_desa_sekitar' => 8, 'jumlah_desa_difasilitasi' => 5, 'nte_langsung' => 16000000, 'nte_tidak_langsung' => 24000000, 'total_nte' => 40000000],
-            ['nama_kawasan' => 'CA Pulau Tokong Bolotu', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 3, 'jumlah_desa_difasilitasi' => 2, 'nte_langsung' => 9000000, 'nte_tidak_langsung' => 11000000, 'total_nte' => 20000000],
-            ['nama_kawasan' => 'TWA Donggala', 'fungsi_kawasan' => 'TWA', 'jumlah_desa_sekitar' => 7, 'jumlah_desa_difasilitasi' => 5, 'nte_langsung' => 15000000, 'nte_tidak_langsung' => 25000000, 'total_nte' => 40000000],
-            ['nama_kawasan' => 'CA Tokorondo', 'fungsi_kawasan' => 'CA', 'jumlah_desa_sekitar' => 10, 'jumlah_desa_difasilitasi' => 6, 'nte_langsung' => 22000000, 'nte_tidak_langsung' => 28000000, 'total_nte' => 50000000],
-            ['nama_kawasan' => 'TWA Cabo', 'fungsi_kawasan' => 'TWA', 'jumlah_desa_sekitar' => 5, 'jumlah_desa_difasilitasi' => 3, 'nte_langsung' => 11000000, 'nte_tidak_langsung' => 19000000, 'total_nte' => 30000000],
-        ];
+        $nteRecords = $this->readCsvRecords(database_path('seeders/data/nte_2025.csv'));
+        $activityRecords = $this->readCsvRecords(database_path('seeders/data/kegiatan_pemberdayaan_2026.csv'));
 
-        foreach ($dataKawasan as $item) {
-            $kawasan = Kawasan::create([
-                'nama_kawasan' => $item['nama_kawasan'],
-                'fungsi_kawasan' => $item['fungsi_kawasan'],
-                'jumlah_desa_sekitar' => $item['jumlah_desa_sekitar'],
-                'jumlah_desa_difasilitasi' => $item['jumlah_desa_difasilitasi'],
-            ]);
+        DB::transaction(function () use ($nteRecords, $activityRecords): void {
+            $sourceKawasanNames = array_column($nteRecords, 'nama_kawasan');
 
-            Nte::create([
-                'kawasan_id' => $kawasan->id,
-                'tahun' => 2025,
-                'nte_langsung' => $item['nte_langsung'],
-                'nte_tidak_langsung' => $item['nte_tidak_langsung'],
-                'total_nte' => $item['total_nte'],
-            ]);
-        }
+            Nte::query()
+                ->where('tahun', 2025)
+                ->whereNotIn('kawasan_id', Kawasan::query()
+                    ->whereIn('nama_kawasan', $sourceKawasanNames)
+                    ->select('id'))
+                ->delete();
 
-        // 2. Masukkan Daftar Kelompok Binaan Lengkap
-        $daftarKelompok = [
-            [
-                'kawasan' => 'SM Bakiriang',
-                'tahun' => 2024,
-                'nama' => 'Kelompok Tani Ternak Makmur',
-                'ketua' => 'Bapak Sulaeman',
-                'hp' => '082112345678',
-                'usaha' => 'Ternak Kambing & Jagung',
-                'produk' => 'Ternak Kambing',
-                'sk' => 'SK.01/BKSDA/2024',
-                'anggota' => 15,
-                'bantuan' => 47625000,
-            ],
-            [
-                'kawasan' => 'CA Morowali',
-                'tahun' => 2025,
-                'nama' => 'Masyarakat Peduli Hutan',
-                'ketua' => 'Ibu Halimah',
-                'hp' => '081298765432',
-                'usaha' => 'Pengolahan Lebah Madu & Kerajinan',
-                'produk' => 'Lebah Madu Hutan',
-                'sk' => 'SK.05/BKSDA/2025',
-                'anggota' => 20,
-                'bantuan' => 23400000,
-            ],
-            [
-                'kawasan' => 'CA Pamona',
-                'tahun' => 2024,
-                'nama' => 'KWT Agro Lestarikan',
-                'ketua' => 'Ibu Maria',
-                'hp' => '085233441122',
-                'usaha' => 'Budidaya Kopi & Kokoa',
-                'produk' => 'Kopi Organik',
-                'sk' => 'SK.08/BKSDA/2024',
-                'anggota' => 18,
-                'bantuan' => 35000000,
-            ],
-            [
-                'kawasan' => 'CA Gunung Dako',
-                'tahun' => 2025,
-                'nama' => 'Kelompok Konservasi Dako Mandiri',
-                'ketua' => 'Bapak Hasan',
-                'hp' => '081377889900',
-                'usaha' => 'Pengolahan Rotan & Gula Aren',
-                'produk' => 'Gula Aren Cetak',
-                'sk' => 'SK.12/BKSDA/2025',
-                'anggota' => 12,
-                'bantuan' => 20000000,
-            ],
-            [
-                'kawasan' => 'TWA Wera',
-                'tahun' => 2025,
-                'nama' => 'Pokdarwis Pesona Air Terjun',
-                'ketua' => 'Bapak Ahmad',
-                'hp' => '082299887766',
-                'usaha' => 'Jasa Wisata Alam & Kuliner Lokal',
-                'produk' => 'Paket Ekowisata',
-                'sk' => 'SK.15/BKSDA/2025',
-                'anggota' => 25,
-                'bantuan' => 30000000,
-            ],
-            [
-                'kawasan' => 'CA Pangi Binangga',
-                'tahun' => 2024,
-                'nama' => 'Kelompok Tani Hijau Lestari',
-                'ketua' => 'Bapak Ruslan',
-                'hp' => '085344556677',
-                'usaha' => 'Budidaya Durian & Alpukat',
-                'produk' => 'Bibit Buah Unggul',
-                'sk' => 'SK.18/BKSDA/2024',
-                'anggota' => 16,
-                'bantuan' => 25000000,
-            ]
-        ];
+            foreach ($nteRecords as $record) {
+                $kawasan = Kawasan::updateOrCreate(
+                    ['nama_kawasan' => $record['nama_kawasan']],
+                    [
+                        'fungsi_kawasan' => $record['fungsi_kawasan'],
+                        'jumlah_desa_sekitar' => (int) $record['jumlah_desa_sekitar'],
+                        'jumlah_desa_difasilitasi' => (int) $record['jumlah_desa_difasilitasi'],
+                    ],
+                );
 
-        foreach ($daftarKelompok as $klp) {
-            $kawasanObj = Kawasan::where('nama_kawasan', $klp['kawasan'])->first();
-            if ($kawasanObj) {
-                Kelompok::create([
-                    'kawasan_id' => $kawasanObj->id,
-                    'tahun_pembinaan' => $klp['tahun'],
-                    'nama_kelompok' => $klp['nama'],
-                    'nama_ketua' => $klp['ketua'],
-                    'no_hp' => $klp['hp'],
-                    'jenis_usaha' => $klp['usaha'],
-                    'produk_unggulan' => $klp['produk'],
-                    'sk_kelompok' => $klp['sk'],
-                    'jumlah_anggota' => $klp['anggota'],
-                    'jumlah_bantuan' => $klp['bantuan'],
-                ]);
+                Nte::updateOrCreate(
+                    [
+                        'kawasan_id' => $kawasan->id,
+                        'tahun' => (int) $record['tahun'],
+                    ],
+                    [
+                        'nte_langsung' => (int) $record['nte_langsung'],
+                        'nte_tidak_langsung' => (int) $record['nte_tidak_langsung'],
+                        'total_nte' => (int) $record['total_nte'],
+                        'data_sumber' => json_decode($record['data_sumber'], true, flags: JSON_THROW_ON_ERROR),
+                    ],
+                );
             }
+
+            foreach ($activityRecords as $record) {
+                KegiatanPemberdayaan::updateOrCreate(
+                    [
+                        'tahun' => (int) $record['tahun'],
+                        'jenis' => $record['jenis'],
+                        'urutan' => (int) $record['urutan'],
+                    ],
+                    [
+                        'nama_kegiatan' => $record['nama_kegiatan'],
+                        'target' => $record['target'] !== '' ? $record['target'] : null,
+                        'waktu' => $record['waktu'] !== '' ? $record['waktu'] : null,
+                        'lead_by' => $record['lead_by'] !== '' ? $record['lead_by'] : null,
+                        'anggota_tim' => $record['anggota_tim'] !== '' ? $record['anggota_tim'] : null,
+                        'data_sumber' => json_decode($record['data_sumber'], true, flags: JSON_THROW_ON_ERROR),
+                    ],
+                );
+            }
+        });
+
+        $desaPath = database_path('seeders/data/desa_kk.csv');
+        $desaHandle = fopen($desaPath, 'r');
+
+        if ($desaHandle === false) {
+            throw new \RuntimeException("Tidak dapat membaca data desa: {$desaPath}");
         }
+
+        $desaHeaders = fgetcsv($desaHandle);
+        $desaRecords = [];
+
+        while (($row = fgetcsv($desaHandle)) !== false) {
+            $desaRecords[] = array_combine($desaHeaders, $row);
+        }
+
+        fclose($desaHandle);
+
+        DB::transaction(function () use ($desaRecords): void {
+            foreach ($desaRecords as $record) {
+                $kawasan = Kawasan::firstOrCreate([
+                    'nama_kawasan' => $record['nama_kawasan'],
+                ]);
+                $kunciDesa = [
+                    'kawasan_id' => $kawasan->id,
+                    'nama_desa' => $record['nama_desa'],
+                ];
+
+                Desa::updateOrCreate(
+                    $kunciDesa,
+                    [
+                        'kode_desa' => $record['kode_desa'] !== '' ? $record['kode_desa'] : null,
+                        'kecamatan' => $record['kecamatan'] !== '' ? $record['kecamatan'] : null,
+                        'kabupaten' => $record['kabupaten'] !== '' ? $record['kabupaten'] : null,
+                        'jumlah_penduduk' => $record['jumlah_penduduk'] !== '' ? (int) $record['jumlah_penduduk'] : null,
+                        'jumlah_penutupan_kk' => $record['jumlah_kk'] !== '' ? (int) $record['jumlah_kk'] : null,
+                        'data_sumber' => json_decode($record['data_sumber'], true, flags: JSON_THROW_ON_ERROR),
+                    ],
+                );
+            }
+        });
+
+        $path = database_path('seeders/data/kelompok_binaan.csv');
+        $handle = fopen($path, 'r');
+
+        if ($handle === false) {
+            throw new \RuntimeException("Tidak dapat membaca data kelompok: {$path}");
+        }
+
+        $headers = fgetcsv($handle);
+        $records = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $records[] = array_combine($headers, $row);
+        }
+
+        fclose($handle);
+
+        DB::transaction(function () use ($records): void {
+            foreach ($records as $record) {
+                $kawasan = Kawasan::firstOrCreate([
+                    'nama_kawasan' => $record['nama_kawasan'],
+                ]);
+                $desa = null;
+
+                if ($record['desa_kk_kode'] !== '') {
+                    $desa = Desa::query()
+                        ->where('kode_desa', $record['desa_kk_kode'])
+                        ->whereHas('kawasan', fn ($query) => $query->where('nama_kawasan', $record['desa_kk_kawasan']))
+                        ->firstOrFail();
+                } elseif ($record['nama_desa'] !== '') {
+                    $desa = Desa::firstOrCreate(
+                        [
+                            'kawasan_id' => $kawasan->id,
+                            'nama_desa' => $record['nama_desa'],
+                        ],
+                        [
+                            'kecamatan' => $record['kecamatan'] !== '' ? $record['kecamatan'] : null,
+                            'kabupaten' => $record['kabupaten'] !== '' ? $record['kabupaten'] : null,
+                        ],
+                    );
+                }
+
+                Kelompok::updateOrCreate(
+                    [
+                        'kawasan_id' => $kawasan->id,
+                        'tahun_pembinaan' => (int) $record['tahun_pembinaan'],
+                        'nama_kelompok' => $record['nama_kelompok'],
+                    ],
+                    [
+                        'desa_id' => $desa?->id,
+                        'kecamatan' => $record['kecamatan'] !== '' ? $record['kecamatan'] : null,
+                        'kabupaten' => $record['kabupaten'] !== '' ? $record['kabupaten'] : null,
+                        'nama_ketua' => $record['nama_ketua'] !== '' ? $record['nama_ketua'] : null,
+                        'no_hp' => $record['no_hp'] !== '' ? $record['no_hp'] : null,
+                        'jenis_usaha' => $record['jenis_usaha'] !== '' ? $record['jenis_usaha'] : null,
+                        'sk_kelompok' => $record['sk_kelompok'] !== '' ? $record['sk_kelompok'] : null,
+                        'jumlah_anggota' => (int) $record['jumlah_anggota'],
+                        'jumlah_bantuan' => (float) $record['jumlah_bantuan'],
+                        'data_sumber' => json_decode($record['data_sumber'], true, flags: JSON_THROW_ON_ERROR),
+                    ],
+                );
+            }
+        });
+    }
+
+    /**
+     * @return array<int, array<string, string>>
+     */
+    private function readCsvRecords(string $path): array
+    {
+        $handle = fopen($path, 'r');
+
+        if ($handle === false) {
+            throw new \RuntimeException("Tidak dapat membaca data: {$path}");
+        }
+
+        try {
+            $headers = fgetcsv($handle);
+
+            if ($headers === false) {
+                throw new \RuntimeException("Data CSV kosong: {$path}");
+            }
+
+            $records = [];
+
+            while (($row = fgetcsv($handle)) !== false) {
+                if (count($row) !== count($headers)) {
+                    throw new \UnexpectedValueException("Jumlah kolom CSV tidak sesuai: {$path}");
+                }
+
+                $records[] = array_combine($headers, $row);
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        return $records;
     }
 }

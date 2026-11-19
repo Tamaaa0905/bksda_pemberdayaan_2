@@ -8,6 +8,13 @@ class Nte extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return [
+            'data_sumber' => 'array',
+        ];
+    }
+
     public function kawasan()
     {
         return $this->belongsTo(Kawasan::class);

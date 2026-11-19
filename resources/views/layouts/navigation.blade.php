@@ -1,9 +1,11 @@
 @php
     $user = Auth::user();
-    $initials = collect(preg_split('/\s+/', trim($user->name)))
-        ->filter()->take(2)
-        ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))
-        ->implode('');
+    $initials = $user
+        ? collect(preg_split('/\s+/', trim($user->name)))
+            ->filter()->take(2)
+            ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))
+            ->implode('')
+        : '';
 @endphp
 
 <!-- Backdrop untuk sidebar mobile -->
@@ -16,26 +18,23 @@
     </a>
 
     <nav class="flex flex-col gap-1">
-        <x-sidebar-link :href="route('dashboard')" icon="table-cells-large" :active="request()->routeIs('dashboard')">Dashboard</x-sidebar-link>
-        <x-sidebar-link :href="route('dashboard').'#kelompok'" icon="people-group">Kelompok Binaan</x-sidebar-link>
-        <x-sidebar-link :href="route('dashboard').'#kawasan'" icon="mountain-sun">Kawasan & NTE</x-sidebar-link>
-        <x-sidebar-link :href="route('kelompok.map')" icon="map-location-dot" :active="request()->routeIs('kelompok.map')">Peta Kawasan</x-sidebar-link>
-        <x-sidebar-link :href="route('kelompok.create')" icon="plus" :active="request()->routeIs('kelompok.create')">Tambah Kelompok</x-sidebar-link>
-        <x-sidebar-link :href="route('profile.edit')" icon="user-gear" :active="request()->routeIs('profile.*')">Profil</x-sidebar-link>
+        @if ($user?->isAdmin())
+            <x-sidebar-link :href="route('dashboard')" icon="table-cells-large" :active="request()->routeIs('dashboard')">Dashboard</x-sidebar-link>
+            <x-sidebar-link :href="route('dashboard').'#kelompok'" icon="people-group">Kelompok Binaan</x-sidebar-link>
+            <x-sidebar-link :href="route('dashboard').'#kawasan'" icon="mountain-sun">Kawasan & NTE</x-sidebar-link>
+        @else
+            <x-sidebar-link :href="route('dashboard')" icon="table-cells-large" :active="request()->routeIs('dashboard')">Dashboard</x-sidebar-link>
+            <x-sidebar-link :href="route('dashboard').'#kelompok'" icon="people-group">Kelompok Binaan</x-sidebar-link>
+        @endif
+        @if ($user?->isAdmin())
+            <x-sidebar-link :href="route('kelompok.map')" icon="map-location-dot" :active="request()->routeIs('kelompok.map')">Peta Kelompok</x-sidebar-link>
+            <x-sidebar-link :href="route('profile.edit')" icon="user-gear" :active="request()->routeIs('profile.*')">Profil</x-sidebar-link>
+        @endif
     </nav>
 
     <div class="mt-auto flex flex-col gap-4">
-        <div class="glass-card flex flex-col gap-3 p-4">
-            <x-icon-badge icon="seedling" class="size-9" />
-            <div>
-                <p class="text-sm font-semibold">Perluas pemberdayaan</p>
-                <p class="mt-1 text-xs text-ink-500">Daftarkan kelompok masyarakat baru di sekitar kawasan konservasi.</p>
-            </div>
-            <a href="{{ route('kelompok.create') }}" class="btn-brand">Tambah Kelompok</a>
-        </div>
-
-        <!-- Menu pengguna -->
-        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+        @if ($user)
+            <div class="relative" x-data="{ open: false }" @click.outside="open = false">
             <button type="button" @click="open = ! open" :aria-expanded="open"
                     class="flex w-full items-center gap-3 rounded-2xl p-2 text-left transition-colors hover:bg-white/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
                 <span class="avatar">{{ $initials }}</span>
@@ -58,6 +57,9 @@
                     </button>
                 </form>
             </div>
-        </div>
+            </div>
+        @else
+            <a href="{{ route('login') }}" class="btn-brand w-full">Login Petugas / Admin</a>
+        @endif
     </div>
 </aside>

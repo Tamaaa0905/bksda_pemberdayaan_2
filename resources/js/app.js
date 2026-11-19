@@ -15,5 +15,18 @@ if (document.getElementById('landing')) {
 }
 
 if (document.getElementById('group-map')) {
-    import('./map');
+    const loadMapModule = () => {
+        if (window.L) {
+            import('./map');
+            return true;
+        }
+
+        return false;
+    };
+
+    if (!loadMapModule()) {
+        window.addEventListener('load', () => {
+            loadMapModule();
+        }, { once: true });
+    }
 }

@@ -67,5 +67,6 @@
                 @include('landing.auth-modal')
             @endguest
         </div>
+        <script type="application/json" id="dashboard-data">@json($dashboardPreview['charts'], JSON_HEX_TAG | JSON_HEX_AMP)</script>
     </body>
 </html>

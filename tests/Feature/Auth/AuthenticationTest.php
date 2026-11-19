@@ -20,6 +20,7 @@ class AuthenticationTest extends TestCase
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
         $user = User::factory()->create();
+        $user->forceFill(['role' => User::ROLE_ADMIN])->save();
 
         $response = $this->post('/login', [
             'email' => $user->email,
@@ -40,6 +41,18 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertGuest();
+    }
+
+    public function test_petugas_can_authenticate_using_the_login_screen(): void
+    {
+        $user = User::factory()->create();
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertRedirect(route('dashboard', absolute: false));
+
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_users_can_logout(): void

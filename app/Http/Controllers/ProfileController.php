@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Desa;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -16,9 +18,54 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        $user = $request->user();
+        $viewData = ['user' => $user];
+
+        if (! $user->isAdmin()) {
+            $user->load('desas');
+            $viewData['desas'] = Desa::query()
+                ->with('kawasan:id,nama_kawasan')
+                ->orderBy('kecamatan')
+                ->orderBy('nama_desa')
+                ->get(['id', 'kawasan_id', 'nama_desa', 'kecamatan', 'kabupaten']);
+            $viewData['kecamatanOptions'] = $viewData['desas']
+                ->pluck('kecamatan')
+                ->filter(fn (?string $kecamatan): bool => filled($kecamatan))
+                ->unique(fn (string $kecamatan): string => Desa::normalizeKecamatan($kecamatan))
+                ->map(fn (string $kecamatan): array => [
+                    'value' => $kecamatan,
+                    'key' => Desa::normalizeKecamatan($kecamatan),
+                ])
+                ->values();
+            $requestedKecamatan = $request->session()->getOldInput(
+                'kecamatan_binaan',
+                $user->kecamatan_binaan ?? '',
+            );
+            $selectedKecamatan = $viewData['kecamatanOptions']->first(
+                fn (array $option): bool => $option['key'] === Desa::normalizeKecamatan($requestedKecamatan),
+            );
+            $viewData['selectedKecamatan'] = $selectedKecamatan['value'] ?? '';
+            $viewData['selectedKecamatanKey'] = $selectedKecamatan['key'] ?? '';
+            $viewData['desaOptions'] = $viewData['desas']
+                ->map(fn (Desa $desa): array => [
+                    'id' => (string) $desa->id,
+                    'kecamatan_key' => Desa::normalizeKecamatan($desa->kecamatan),
+                    'label' => implode(' — ', array_filter([
+                        $desa->nama_desa,
+                        $desa->kecamatan ?? 'Kecamatan belum tercatat',
+                        $desa->kawasan?->nama_kawasan,
+                    ])),
+                ])
+                ->filter(fn (array $desa): bool => $desa['kecamatan_key'] !== '')
+                ->values()
+                ->all();
+            $viewData['selectedDesaIds'] = $user->desas
+                ->pluck('id')
+                ->map(fn (int $id): string => (string) $id)
+                ->all();
+        }
+
+        return view('profile.edit', $viewData);
     }
 
     /**
@@ -26,13 +73,26 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
+        $updateWorkArea = (bool) ($validated['update_work_area'] ?? false);
+        $desaIds = $validated['desa_binaan'] ?? [];
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+        unset($validated['update_work_area'], $validated['desa_binaan']);
 
-        $request->user()->save();
+        DB::transaction(function () use ($user, $validated, $updateWorkArea, $desaIds): void {
+            $user->fill($validated);
+
+            if ($user->isDirty('email')) {
+                $user->email_verified_at = null;
+            }
+
+            $user->save();
+
+            if ($updateWorkArea) {
+                $user->desas()->sync($desaIds);
+            }
+        });
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }

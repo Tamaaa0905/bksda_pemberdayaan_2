@@ -1,61 +1,18 @@
 @php
-    // ---- Ringkasan angka (semua dihitung dari data yang sudah dikirim controller) ----
-    $targetNte = 1_575_000_000; // Target NTE: Rp 1,575 M
-    $totalNte = (float) ($totalNte ?? 0);
-    $capaian = $totalNte > 0 ? round($totalNte / $targetNte * 100, 1) : 0;
-
-    $nteKawasan = $kawasans->filter(fn ($k) => $k->nte);
-    $tahunNte = $nteKawasan->first()?->nte?->tahun;
-    $urutNte = $nteKawasan->sortByDesc(fn ($k) => (float) $k->nte->total_nte)->values();
-    $kawasanTeratas = $urutNte->take(4);
-    $topDelapan = $urutNte->take(8);
-
-    $totalLangsung = (float) $nteKawasan->sum(fn ($k) => $k->nte->nte_langsung);
-    $porsiLangsung = $totalNte > 0 ? round($totalLangsung / $totalNte * 100, 1) : 0;
-
-    // ---- Bantuan per jenis usaha (4 teratas + lainnya) ----
-    $perUsaha = $kelompoks
-        ->groupBy(fn ($k) => $k->jenis_usaha ?: 'Lainnya')
-        ->map(fn ($grup) => (float) $grup->sum('jumlah_bantuan'))
-        ->sortDesc();
-    $usahaTampil = $perUsaha->take(4);
-    if (($sisa = $perUsaha->slice(4)->sum()) > 0) {
-        $usahaTampil->put('Lainnya', ($usahaTampil['Lainnya'] ?? 0) + $sisa);
-    }
-    $totalUsaha = $usahaTampil->sum();
-    $persen = fn ($nilai, $total) => number_format($total > 0 ? $nilai / $total * 100 : 0, 1, ',', '.');
-    $palet = ['#0f8f84', '#35bfae', '#7fb4f0', '#a9cdf5', '#d3e6fb'];
+    $capaian = $dashboardData['capaian'];
+    $tahunNte = $dashboardData['tahunNte'];
+    $kawasanTeratas = $dashboardData['kawasanTeratas'];
+    $totalLangsung = $dashboardData['totalLangsung'];
+    $porsiLangsung = $dashboardData['porsiLangsung'];
+    $usahaTampil = $dashboardData['usahaTampil'];
+    $totalUsaha = $dashboardData['totalUsaha'];
+    $palet = $dashboardData['palet'];
 
     $kelompokTerbaru = $kelompoks->sortByDesc('id')->take(5);
     $nadaAvatar = ['teal', 'blue', 'purple', 'green', 'amber'];
     $nadaFungsi = ['CA' => 'teal', 'SM' => 'blue', 'TWA' => 'green', 'TB' => 'purple'];
 
-    // ---- Data grafik (dibaca oleh resources/js/dashboard.js) ----
-    $kumulatif = 0;
-    $clusterData = $clusterData ?? App\Http\Controllers\DashboardController::buildKawasanClusterData($kawasans, (float) $totalNte);
-
-    $charts = [
-        'nte' => [
-            'labels' => $urutNte->pluck('nama_kawasan'),
-            'each' => $urutNte->map(fn ($k) => round($k->nte->total_nte / 1e6, 1)),
-            'values' => $urutNte->map(function ($k) use (&$kumulatif) {
-                $kumulatif += $k->nte->total_nte / 1e6;
-
-                return round($kumulatif, 1);
-            }),
-        ],
-        'usaha' => [
-            'labels' => $usahaTampil->keys(),
-            'values' => $usahaTampil->values(),
-            'colors' => array_slice($palet, 0, $usahaTampil->count()),
-        ],
-        'split' => [
-            'labels' => $topDelapan->pluck('nama_kawasan'),
-            'langsung' => $topDelapan->map(fn ($k) => round($k->nte->nte_langsung / 1e6, 1)),
-            'tidakLangsung' => $topDelapan->map(fn ($k) => round($k->nte->nte_tidak_langsung / 1e6, 1)),
-        ],
-        'cluster' => $clusterData,
-    ];
+    $charts = $chartData;
     $charts['cluster'] = $clusterAnalysis;
 @endphp
 
@@ -210,7 +167,7 @@
                     <div class="empty-state">Belum ada data NTE kawasan.</div>
                 @else
                     <div x-data="{ i: 0 }">
-                        <div class="grid grid-cols-[1fr_4.75rem] gap-3">
+                        <div class="grid grid-cols-1 gap-3">
                             <div>
                                 @foreach ($kawasanTeratas as $k)
                                     <article x-show="i === {{ $loop->index }}" @unless ($loop->first) x-cloak @endunless class="kawasan-card">
@@ -229,11 +186,6 @@
                                     </article>
                                 @endforeach
                             </div>
-
-                            <a href="{{ route('kelompok.create') }}" class="add-tile">
-                                <span class="grid size-9 place-items-center rounded-full border border-slate-300"><i class="fa-solid fa-plus" aria-hidden="true"></i></span>
-                                Tambah Kelompok
-                            </a>
                         </div>
 
                         <div class="mt-4 flex justify-center gap-2">
@@ -293,7 +245,6 @@
                     <h2 class="card-title">Daftar Kelompok Binaan</h2>
                     <p class="mt-0.5 text-xs text-ink-500">Kelompok masyarakat di sekitar kawasan konservasi BKSDA Sulteng.</p>
                 </div>
-                <a href="{{ route('kelompok.create') }}" class="btn-brand"><i class="fa-solid fa-plus" aria-hidden="true"></i> Tambah Kelompok</a>
             </header>
 
             <div class="overflow-x-auto px-3 pb-3">
@@ -313,7 +264,9 @@
                             <th>SK Kelompok</th>
                             <th>Anggota Kelompok</th>
                             <th>Jumlah Bantuan</th>
-                            <th class="w-20 text-right">Aksi</th>
+                            <th>Hasil / Keuntungan Usaha</th>
+                            <th>Status & Kebutuhan</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -324,7 +277,7 @@
                                 <td>
                                     <span class="tag"><i class="fa-solid fa-location-dot text-rose-500" aria-hidden="true"></i>{{ $kelompok->kawasan->nama_kawasan ?? '-' }}</span>
                                 </td>
-                                <td>{{ $kelompok->desa?->nama_desa ?? '-' }}</td>
+                                <td>{{ $kelompok->data_sumber['D'] ?? $kelompok->desa?->nama_desa ?? '-' }}</td>
                                 <td>{{ $kelompok->kecamatan ?? $kelompok->desa?->kecamatan ?? '-' }}</td>
                                 <td>{{ $kelompok->kabupaten ?? $kelompok->desa?->kabupaten ?? '-' }}</td>
                                 <td>
@@ -340,27 +293,41 @@
                                 <td>{{ $kelompok->no_hp ?? '-' }}</td>
                                 <td><span class="tag">{{ $kelompok->jenis_usaha ?? '-' }}</span></td>
                                 <td class="max-w-[180px] break-words">{{ $kelompok->sk_kelompok ?? '-' }}</td>
-                                <td>{{ $kelompok->jumlah_anggota ?? 0 }}</td>
+                                <td>{{ $kelompok->data_sumber['L'] ?? $kelompok->jumlah_anggota ?? 0 }}</td>
                                 <td class="whitespace-nowrap font-semibold text-brand-700"><x-rupiah :value="$kelompok->jumlah_bantuan" full /></td>
-                                <td class="text-right">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <a href="{{ route('kelompok.edit', $kelompok->id) }}" class="btn-icon" title="Edit data" aria-label="Edit {{ $kelompok->nama_kelompok }}">
-                                            <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
-                                        </a>
-                                        <form action="{{ route('kelompok.destroy', $kelompok->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn-icon-danger" title="Hapus data" aria-label="Hapus {{ $kelompok->nama_kelompok }}"
-                                                    onclick="return confirm('Yakin ingin menghapus data kelompok ini?')">
-                                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                                            </button>
-                                        </form>
-                                    </div>
+                                <td class="whitespace-nowrap">
+                                    @if ($kelompok->hasil_usaha !== null)
+                                        <x-rupiah :value="$kelompok->hasil_usaha" full />
+                                    @else
+                                        <span class="text-ink-500">Belum didata</span>
+                                    @endif
+                                </td>
+                                <td class="min-w-[220px]">
+                                    @if ($kelompok->status_keaktifan === 'aktif')
+                                        <span class="tag">Aktif</span>
+                                        <p class="mt-1 text-xs">Bantuan lanjutan: {{ $kelompok->butuh_bantuan_lanjutan === null ? 'Belum didata' : ($kelompok->butuh_bantuan_lanjutan ? 'Ya' : 'Tidak') }}</p>
+                                        <p class="text-xs">Pendampingan: {{ $kelompok->butuh_pendampingan === null ? 'Belum didata' : ($kelompok->butuh_pendampingan ? 'Ya' : 'Tidak') }}</p>
+                                        @if ($kelompok->catatan_kebutuhan)
+                                            <p class="mt-1 whitespace-normal text-xs text-ink-500">{{ $kelompok->catatan_kebutuhan }}</p>
+                                        @endif
+                                    @elseif ($kelompok->status_keaktifan === 'tidak_aktif')
+                                        <span class="tag">Tidak aktif</span>
+                                        <p class="mt-1 whitespace-normal text-xs">Kendala: {{ $kelompok->kendala ?: 'Belum dicatat' }}</p>
+                                    @else
+                                        <span class="tag">Belum didata</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('kelompok.edit', $kelompok) }}" class="btn-icon"
+                                       title="Edit data"
+                                       aria-label="Edit data {{ $kelompok->nama_kelompok }}">
+                                        <i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>
+                                    </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="14">
+                                <td colspan="15">
                                     <div class="empty-state">
                                         <i class="fa-solid fa-folder-open text-2xl text-ink-400" aria-hidden="true"></i>
                                         Belum ada data kelompok binaan yang terdaftar.
@@ -376,21 +343,12 @@
         <x-glass-card id="clustering" class="scroll-mt-6">
             <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
-<<<<<<< Updated upstream
-                    <h2 class="card-title">Analisis Clustering Kawasan Berdasarkan NTE</h2>
-                    <p class="mt-0.5 text-xs text-ink-500">Pemetaan kawasan hasil proses data mining untuk melihat pola kontribusi NTE dan keterkaitan dengan jumlah desa penyangga.</p>
-=======
                     <h2 class="card-title">Data Mining: K-Means Clustering Kawasan</h2>
                     <p class="mt-0.5 text-xs text-ink-500">Fitur: Total NTE, jumlah desa sekitar, dan rasio desa difasilitasi. Data dinormalisasi dengan Min-Max sebelum pengelompokan.</p>
->>>>>>> Stashed changes
                 </div>
                 <span class="chip chip-neutral px-3 py-1.5"><i class="fa-solid fa-brain" aria-hidden="true"></i> Data Mining</span>
             </header>
 
-<<<<<<< Updated upstream
-            <div class="relative mt-5 h-80">
-                <canvas id="chart-cluster" role="img" aria-label="Diagram sebar kawasan berdasarkan total NTE dan jumlah desa"></canvas>
-=======
             <div class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
                     <p class="text-xs text-ink-500">Data yang dianalisis</p>
@@ -416,7 +374,6 @@
                         <p class="text-xs text-ink-500">Fasilitasi desa rata-rata {{ number_format($cluster['mean_coverage_percent'], 1, ',', '.') }}%</p>
                     </div>
                 @endforeach
->>>>>>> Stashed changes
             </div>
 
             @if ($clusterAnalysis['status'] === 'ok')
